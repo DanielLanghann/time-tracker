@@ -7,7 +7,6 @@ class UserCreationForm(auth_forms.AdminUserCreationForm):
     class Meta(auth_forms.AdminUserCreationForm.Meta):
         model = User
         fields = ("email",)
-        field_classes = {}
 
 
 class UserChangeForm(auth_forms.UserChangeForm):
@@ -28,4 +27,3 @@ class UserChangeForm(auth_forms.UserChangeForm):
             "last_login",
             "date_joined",
         )
-        field_classes = {}

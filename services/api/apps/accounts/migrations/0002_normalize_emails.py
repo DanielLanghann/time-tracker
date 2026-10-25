@@ -14,7 +14,7 @@ def normalize_emails(apps, schema_editor):
         RuntimeError: If any user has an empty email or a case-insensitive duplicate.
     """
     User = apps.get_model("accounts", "User")
-    users = list(User.objects.only("id", "email"))
+    users = list(User.objects.only("id", "email").order_by("pk"))
 
     ids_by_email = defaultdict(list)
     empty_ids = []

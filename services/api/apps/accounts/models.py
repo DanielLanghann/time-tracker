@@ -33,19 +33,24 @@ class User(AbstractUser):
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS: ClassVar[list[str]] = []
 
     # Annotated so type checkers use this manager instead of the username-based
     # UserManager that the Django stubs declare on AbstractUser.
     objects: ClassVar[UserManager] = UserManager()
 
     class Meta(AbstractUser.Meta):
-        constraints = [
-            # Stored emails are canonical, so the plain unique index on email
-            # is also case-insensitive, even for writes that skip save().
+        constraints = (
+            # Stored emails are canonical (lower-case, no whitespace), so the
+            # plain unique index on email also catches variants of an address,
+            # even for writes that skip save().
             models.CheckConstraint(
                 condition=Q(email=Lower("email")),
                 name="accounts_user_email_lowercase",
+            ),
+            models.CheckConstraint(
+                condition=~Q(email__regex=r"\s"),
+                name="accounts_user_email_no_whitespace",
             ),
             models.CheckConstraint(
                 condition=~Q(email=""),
@@ -55,7 +60,7 @@ class User(AbstractUser):
                 condition=Q(week_start__in=[1, 7]),
                 name="accounts_user_week_start_valid",
             ),
-        ]
+        )
 
     def save(self, **kwargs):
         """Store the email in canonical form, also when full_clean() was skipped."""

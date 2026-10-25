@@ -49,6 +49,21 @@ def test_database_rejects_mixed_case_email_via_bulk_create(db):
         User.objects.bulk_create([User(email="Foo@example.com")])
 
 
+WHITESPACE_EMAILS = [" foo@example.com", "foo@example.com\t", "foo @example.com", "   "]
+
+
+@pytest.mark.parametrize("email", WHITESPACE_EMAILS)
+def test_database_rejects_whitespace_in_email_via_update(user, email):
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.filter(pk=user.pk).update(email=email)
+
+
+@pytest.mark.parametrize("email", WHITESPACE_EMAILS)
+def test_database_rejects_whitespace_in_email_via_bulk_create(db, email):
+    with pytest.raises(IntegrityError), transaction.atomic():
+        User.objects.bulk_create([User(email=email)])
+
+
 def test_user_has_no_username_field():
     field_names = {field.name for field in User._meta.get_fields()}
 
