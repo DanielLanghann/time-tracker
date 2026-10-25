@@ -66,4 +66,55 @@ Read-only evaluation of tracked time. This app has no models of its own.
 
 All reports share the same filters (date range, users, customers, streams, tags, billable) and are calculated from `tracking` data on request.
 
+Do from the start
+
+Code quality and delivery
+
+Tests with pytest-django, linting with ruff, and a CI pipeline that runs both on every push
+One Docker image used everywhere, served by gunicorn in production
+manage.py check --deploy passing in CI against production settings
+Never edit migrations that have already been applied anywhere
+
+Data correctness, the heart of a time tracker
+
+USE_TZ = True, store everything in UTC, and convert to each user’s time zone only for display and for “which day does this entry belong to.” Today is a good reminder: clocks went back at 3:00 this morning, so a naive implementation would have an entry from 2:30 to 3:30 last either one hour or two.
+Decimal for all money and rates, never float
+created_at, updated_at and created_by on core models, and archiving instead of deleting
+Workspace scoping enforced in one central place, with tests proving one workspace can’t see another’s data
+
+API contract
+
+Generate an OpenAPI schema with drf-spectacular and a TypeScript client for Vue from it. That keeps frontend and backend in sync without manual work.
+
+Operations
+
+Automated Postgres backups, plus a restore you’ve actually tested once. This data drives customer billing, so it matters more than anything else in this list.
+Error tracking (Sentry, or self-hosted GlitchTip), structured logs and a /health endpoint
+Dependency updates via Dependabot or Renovate
+
+Security and privacy
+
+HTTPS, secure cookies, rate-limited login. Later, SSO with your company’s identity provider, for example via django-allauth.
+Time entries are personal data, so decide early who may see whose entries (own entries, stream members, admins)
+Defer on purpose
+
+Kubernetes, Celery and background jobs, caching, invoicing, approvals, mobile apps, and anything for the hosted version, such as signup or billing. None of these block internal use, and your architecture leaves room for all of them.
+
+Getting to the Clockify switch
+Define the MVP from real usage. Ask your colleagues what they do in Clockify daily. It’s usually timer, manual entries, clients and projects, a summary report and a CSV export.
+Build a Clockify importer early. Clockify has an API, and importing customers, projects and historical entries means nobody loses their data and you can compare reports directly.
+Run both in parallel for two weeks. Matching totals in both tools are your proof that it’s ready.
+Then switch. Keep the Clockify export as an archive.
+
+For the cost argument, it’s worth writing down once what Clockify actually costs you per year and comparing it against hosting plus a realistic estimate of your own maintenance time. Even if the savings turn out modest, the learning and the option for later are a perfectly good reason on their own.
+
+## Helpful commands
+### Check Database
+```bash
+docker exec -it time-tracker-db-1 psql -U timetracker -d timetracker
+```
+Inside the Database, see all tables:
+```bash
+\dt
+```
 
